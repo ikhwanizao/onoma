@@ -241,7 +241,7 @@ export default function App() {
 
         <footer className="mt-12 text-center text-xs text-zinc-600">
           <a
-            href="https://ko-fi.com/onoma"
+            href="https://ko-fi.com/izao00"
             target="_blank"
             rel="noreferrer"
             className="hover:text-lime-300"
