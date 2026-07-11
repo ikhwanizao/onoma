@@ -1,62 +1,24 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Nunito', ui-rounded, system-ui, sans-serif;
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  /* springy overshoot curve — the "Duolingo bounce" */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  --animate-pop-in: pop-in 0.25s var(--ease-spring) both;
-  --animate-rise-in: rise-in 0.45s var(--ease-spring) both;
-  --animate-shake: shake 0.4s ease-in-out;
-  --animate-bounce-dot: bounce-dot 0.5s ease-in-out infinite alternate;
+  /* one sequencer cycle = 8 steps × 120ms */
+  --animate-seq-step: seq-step 0.96s linear infinite;
 }
 
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes shake {
+@keyframes seq-step {
   0%,
   100% {
-    transform: none;
+    opacity: 0.2;
   }
-  20%,
-  60% {
-    transform: translateX(-6px);
-  }
-  40%,
-  80% {
-    transform: translateX(6px);
-  }
-}
-
-@keyframes bounce-dot {
-  from {
-    transform: translateY(1px);
-    opacity: 0.5;
-  }
-  to {
-    transform: translateY(-5px);
+  6%,
+  16% {
     opacity: 1;
+  }
+  24% {
+    opacity: 0.2;
   }
 }
 

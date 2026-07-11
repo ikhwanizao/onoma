@@ -9,7 +9,8 @@ const SUGGESTED_TAGS = [
 const TAGS_REQUIRED_MESSAGE = 'Add at least one tag describing the beat.'
 const GENERIC_ERROR_MESSAGE = 'Name generation hiccuped. Try again.'
 
-const spring = { type: 'spring', stiffness: 500, damping: 30 }
+// tight and quantized — a pad hit, not a bounce
+const spring = { type: 'spring', stiffness: 700, damping: 42 }
 
 function formatCooldown(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
@@ -39,7 +40,7 @@ function TagInput({ tags, onChange }) {
   return (
     <div>
       <div
-        className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 focus-within:border-lime-400"
+        className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 focus-within:border-amber-400"
         onClick={() => inputRef.current?.focus()}
       >
         <AnimatePresence initial={false}>
@@ -47,17 +48,17 @@ function TagInput({ tags, onChange }) {
             <motion.span
               layout
               key={tag}
-              initial={{ scale: 0.5, opacity: 0 }}
+              initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
+              exit={{ scale: 0.7, opacity: 0 }}
               transition={spring}
-              className="flex items-center gap-1 rounded-full bg-lime-400/15 py-1 pl-3 pr-1.5 text-sm leading-none text-lime-300"
+              className="flex items-center gap-1 rounded-md bg-amber-400/10 py-1 pl-2.5 pr-1.5 text-sm leading-none text-amber-300"
             >
               {tag}
               <button
                 type="button"
                 aria-label={`remove ${tag}`}
-                className="flex h-4 w-4 items-center justify-center rounded-full leading-none text-lime-300/60 hover:bg-lime-400/25 hover:text-lime-300"
+                className="flex h-4 w-4 items-center justify-center rounded leading-none text-amber-300/60 hover:bg-amber-400/20 hover:text-amber-300"
                 onClick={() => onChange(tags.filter((t) => t !== tag))}
               >
                 ×
@@ -82,14 +83,13 @@ function TagInput({ tags, onChange }) {
               layout
               key={s}
               type="button"
-              initial={{ scale: 0.5, opacity: 0 }}
+              initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.85 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              whileTap={{ scale: 0.9 }}
               transition={spring}
               onClick={() => onChange([...tags, s])}
-              className="rounded-full border border-zinc-700 px-2.5 py-0.5 text-xs text-zinc-400 hover:border-lime-400 hover:text-lime-300"
+              className="rounded-md border border-zinc-700 px-2.5 py-0.5 font-mono text-xs text-zinc-400 hover:border-amber-400/60 hover:text-amber-300"
             >
               + {s}
             </motion.button>
@@ -100,12 +100,12 @@ function TagInput({ tags, onChange }) {
   )
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 16, scale: 0.95 },
-  show: { opacity: 1, y: 0, scale: 1, transition: spring },
+const padVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  show: { opacity: 1, scale: 1, transition: spring },
 }
 
-function NameCard({ name }) {
+function NamePad({ name }) {
   const [copied, setCopied] = useState(false)
 
   async function copy() {
@@ -121,40 +121,37 @@ function NameCard({ name }) {
   return (
     <motion.button
       type="button"
-      variants={cardVariants}
-      whileHover={{ y: -2, scale: 1.01 }}
-      whileTap={{ scale: 0.97 }}
+      variants={padVariants}
+      whileTap={{ scale: 0.94 }}
       onClick={copy}
-      className="group flex w-full items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-left hover:border-lime-400/60"
+      className={`flex min-h-24 flex-col justify-between rounded-lg border bg-gradient-to-b from-zinc-800 to-zinc-900 p-3 text-left transition-colors ${
+        copied
+          ? 'border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]'
+          : 'border-zinc-700/80 hover:border-zinc-500'
+      }`}
     >
-      <span className="text-base text-zinc-100">{name}</span>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={copied ? 'copied' : 'copy'}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.5, opacity: 0 }}
-          transition={spring}
-          className={
-            copied
-              ? 'text-xs font-bold text-lime-300'
-              : 'text-xs text-zinc-600 group-hover:text-zinc-400'
-          }
-        >
-          {copied ? 'copied!' : 'copy'}
-        </motion.span>
-      </AnimatePresence>
+      <span className="text-[0.95rem] font-medium leading-snug text-zinc-100">{name}</span>
+      <span className="mt-2 flex items-center gap-1.5">
+        <span
+          className={`h-1.5 w-1.5 rounded-full transition-all ${
+            copied ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]' : 'bg-zinc-600'
+          }`}
+        />
+        <span className={`font-mono text-[0.65rem] uppercase tracking-wider ${copied ? 'text-amber-300' : 'text-zinc-500'}`}>
+          {copied ? 'copied' : 'copy'}
+        </span>
+      </span>
     </motion.button>
   )
 }
 
-function LoadingDots() {
+function StepSequencer() {
   return (
-    <span className="flex items-center justify-center gap-1.5">
-      {[0, 1, 2].map((i) => (
+    <span className="flex items-center justify-center gap-1" aria-label="generating">
+      {Array.from({ length: 8 }, (_, i) => (
         <span
           key={i}
-          className="h-2 w-2 animate-bounce-dot rounded-full bg-zinc-950"
+          className="h-2.5 w-2.5 animate-seq-step rounded-[3px] bg-zinc-950"
           style={{ animationDelay: `${i * 120}ms` }}
         />
       ))}
@@ -175,6 +172,10 @@ export default function App() {
   const [now, setNow] = useState(() => Date.now())
 
   const cooldownSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0
+
+  // pads land in sixteenth-notes at the beat's own tempo (falls back to 125 BPM)
+  const bpmNum = Number(bpm)
+  const stepSeconds = Math.min(0.2, Math.max(0.05, bpmNum > 0 ? 15 / bpmNum : 0.12))
 
   useEffect(() => {
     if (!cooldownUntil) return undefined
@@ -229,28 +230,30 @@ export default function App() {
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <main className="mx-auto max-w-xl px-4 py-10">
           <motion.header
-            initial={{ opacity: 0, y: -12 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={spring}
             className="mb-8"
           >
-            <h1 className="text-3xl font-extrabold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight">
               Onoma
               <motion.span
-                className="inline-block text-lime-400"
-                animate={{ scale: [1, 1.4, 1] }}
-                transition={{ duration: 0.45, repeat: Infinity, repeatDelay: 4 }}
+                className="inline-block text-amber-400"
+                animate={{ opacity: [1, 0.35, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               >
                 .
               </motion.span>
             </h1>
-            <p className="mt-1 text-sm text-zinc-500">stop exporting untitled_final_v3.wav</p>
+            <p className="mt-1 font-mono text-xs text-zinc-500">
+              stop exporting untitled_final_v3.wav
+            </p>
           </motion.header>
 
           <motion.form
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.08 }}
+            transition={{ ...spring, delay: 0.06 }}
             onSubmit={(e) => {
               e.preventDefault()
               generate()
@@ -258,16 +261,16 @@ export default function App() {
             className="space-y-4"
           >
             <div>
-              <label className="mb-1.5 block text-sm font-bold text-zinc-400">
-                Describe the beat <span className="text-lime-400">*</span>
+              <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
+                Describe the beat <span className="text-amber-400">*</span>
               </label>
               <TagInput tags={tags} onChange={setTags} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="bpm" className="mb-1.5 block text-sm font-bold text-zinc-400">
-                  BPM <span className="font-normal text-zinc-600">(optional)</span>
+                <label htmlFor="bpm" className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
+                  BPM <span className="normal-case text-zinc-600">(optional)</span>
                 </label>
                 <input
                   id="bpm"
@@ -277,26 +280,26 @@ export default function App() {
                   value={bpm}
                   onChange={(e) => setBpm(e.target.value)}
                   placeholder="140"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm outline-none placeholder:text-zinc-600 focus:border-lime-400"
+                  className="w-full rounded-lg border border-zinc-700 bg-black px-3 py-2.5 font-mono text-sm text-amber-300 shadow-[inset_0_2px_6px_rgba(0,0,0,0.7)] outline-none [text-shadow:0_0_8px_rgba(251,191,36,0.4)] placeholder:text-amber-300/20 focus:border-amber-400"
                 />
               </div>
               <div>
-                <label htmlFor="artist" className="mb-1.5 block text-sm font-bold text-zinc-400">
-                  Sounds like <span className="font-normal text-zinc-600">(optional)</span>
+                <label htmlFor="artist" className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
+                  Sounds like <span className="normal-case text-zinc-600">(optional)</span>
                 </label>
                 <input
                   id="artist"
                   value={referenceArtist}
                   onChange={(e) => setReferenceArtist(e.target.value)}
                   placeholder="Travis Scott"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm outline-none placeholder:text-zinc-600 focus:border-lime-400"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm outline-none placeholder:text-zinc-600 focus:border-amber-400"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="vibe" className="mb-1.5 block text-sm font-bold text-zinc-400">
-                Vibe notes <span className="font-normal text-zinc-600">(optional)</span>
+              <label htmlFor="vibe" className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
+                Vibe notes <span className="normal-case text-zinc-600">(optional)</span>
               </label>
               <textarea
                 id="vibe"
@@ -304,22 +307,21 @@ export default function App() {
                 value={vibeNotes}
                 onChange={(e) => setVibeNotes(e.target.value)}
                 placeholder="3am parking garage, sounds like a chase scene…"
-                className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm outline-none placeholder:text-zinc-600 focus:border-lime-400"
+                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm outline-none placeholder:text-zinc-600 focus:border-amber-400"
               />
             </div>
 
             <motion.button
               type="submit"
               disabled={loading || cooldownSeconds > 0}
-              style={{ boxShadow: '0 5px 0 0 var(--color-lime-600)' }}
-              whileHover={{ scale: 1.015 }}
-              whileTap={{ y: 5, scale: 1, boxShadow: '0 0px 0 0 var(--color-lime-600)' }}
+              style={{ boxShadow: '0 5px 0 0 var(--color-amber-600)' }}
+              whileTap={{ y: 5, boxShadow: '0 0px 0 0 var(--color-amber-600)' }}
               transition={spring}
-              className="w-full rounded-2xl bg-lime-400 py-3 font-extrabold uppercase tracking-wider text-zinc-950 hover:bg-lime-300 disabled:cursor-wait disabled:opacity-60"
+              className="w-full rounded-xl bg-amber-400 py-3 font-bold uppercase tracking-widest text-zinc-950 hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
             >
-              <span className="flex h-6 items-center justify-center tabular-nums">
+              <span className="flex h-6 items-center justify-center font-mono tabular-nums">
                 {loading ? (
-                  <LoadingDots />
+                  <StepSequencer />
                 ) : cooldownSeconds > 0 ? (
                   `wait ${formatCooldown(cooldownSeconds)}`
                 ) : names ? (
@@ -340,11 +342,11 @@ export default function App() {
                 animate={{ opacity: 1, y: 0, x: [0, -6, 6, -6, 6, 0] }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ default: spring, x: { duration: 0.4, ease: 'easeInOut' } }}
-                className="mt-4 rounded-xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300"
+                className="mt-4 rounded-lg border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300"
               >
                 {error}
                 {cooldownSeconds > 0 && (
-                  <span className="mt-1 block font-bold tabular-nums text-red-200">
+                  <span className="mt-1 block font-mono font-semibold tabular-nums text-red-200">
                     next batch in {formatCooldown(cooldownSeconds)}
                   </span>
                 )}
@@ -357,12 +359,12 @@ export default function App() {
               key={batchId}
               initial="hidden"
               animate="show"
-              variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-              className="mt-6 space-y-2"
+              variants={{ show: { transition: { staggerChildren: stepSeconds } } }}
+              className="mt-6 grid grid-cols-2 gap-2"
               aria-label="generated names"
             >
               {names.map((name) => (
-                <NameCard key={name} name={name} />
+                <NamePad key={name} name={name} />
               ))}
             </motion.section>
           )}
@@ -371,13 +373,13 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mt-12 text-center text-xs text-zinc-600"
+            className="mt-12 text-center font-mono text-xs text-zinc-600"
           >
             <a
               href="https://ko-fi.com/izao00"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-lime-300"
+              className="hover:text-amber-300"
             >
               enjoying onoma? buy me a coffee ☕
             </a>
