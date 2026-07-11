@@ -1,0 +1,9 @@
+# Onoma
+
+> Onoma generates beat names for beatmakers, so they stop exporting `untitled_final_v3.wav`.
+
+Onoma solves the naming block: the moment a beatmaker finishes a beat and stalls on choosing a name. A beatmaker describes the beat with free-form tags (plus optional BPM, reference artist, and vibe notes) and Onoma returns a batch of ~10 AI-generated names in mixed styles, anchored to the beat's actual traits rather than random. Onoma is stateless — no accounts, nothing stored.
+
+## Docs
+
+- [Home](https://onoma.izao.my/): the app itself — describe a beat and generate names.
