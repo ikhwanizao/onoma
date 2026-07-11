@@ -26,6 +26,7 @@ afterEach(async () => {
   setGlobalDispatcher(previousDispatcher)
   await mockAgent.close()
   delete process.env.RATE_LIMIT_MAX
+  delete process.env.RATE_LIMIT_BYPASS_KEY
 })
 
 function mockGemini({ status = 200, names = TEN_NAMES, body } = {}) {
@@ -140,5 +141,27 @@ describe('POST /api/generate', () => {
     expect(third.body.error.code).toBe('RATE_LIMITED')
     expect(third.body.error.retryAfterSeconds).toBeGreaterThan(0)
     expect(third.body.error.retryAfterSeconds).toBeLessThanOrEqual(60 * 60)
+  })
+
+  it('skips rate limiting for requests carrying the bypass key', async () => {
+    process.env.RATE_LIMIT_MAX = '1'
+    process.env.RATE_LIMIT_BYPASS_KEY = 'operator-secret'
+    const app = createApp()
+    mockGemini()
+    mockGemini()
+    const first = await request(app).post('/api/generate').send({ tags: ['trap'] })
+    const limited = await request(app).post('/api/generate').send({ tags: ['trap'] })
+    const bypassed = await request(app)
+      .post('/api/generate')
+      .set('x-bypass-key', 'operator-secret')
+      .send({ tags: ['trap'] })
+    const wrongKey = await request(app)
+      .post('/api/generate')
+      .set('x-bypass-key', 'guessed-wrong')
+      .send({ tags: ['trap'] })
+    expect(first.status).toBe(200)
+    expect(limited.status).toBe(429)
+    expect(bypassed.status).toBe(200)
+    expect(wrongKey.status).toBe(429)
   })
 })

@@ -31,6 +31,7 @@ Tests exercise the single seam (`POST /api/generate`) with the Gemini call mocke
 | `GEMINI_MODEL` | `gemini-flash-lite-latest` | Model ID |
 | `RATE_LIMIT_MAX` | `15` | Generations per IP per window |
 | `RATE_LIMIT_WINDOW_MS` | `3600000` (1 h) | Rate-limit window |
+| `RATE_LIMIT_BYPASS_KEY` | — (off) | Requests with matching `x-bypass-key` header skip rate limiting; plant it on your devices via `localStorage.setItem('onoma-bypass-key', '…')` |
 | `PORT` | `8080` | Listen port (set by Cloud Run) |
 
 ## Deploy (Cloud Run)

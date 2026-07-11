@@ -198,9 +198,14 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
+      // operator bypass: localStorage.setItem('onoma-bypass-key', '…') once on your own devices
+      const bypassKey = localStorage.getItem('onoma-bypass-key')
       const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...(bypassKey && { 'x-bypass-key': bypassKey }),
+        },
         body: JSON.stringify({
           tags,
           bpm: bpm ? Number(bpm) : undefined,

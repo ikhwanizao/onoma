@@ -42,6 +42,10 @@ export function createApp() {
     limit: Number(process.env.RATE_LIMIT_MAX) || 15,
     standardHeaders: true,
     legacyHeaders: false,
+    // operator backdoor: requests carrying the bypass key are never limited
+    skip: (req) =>
+      Boolean(process.env.RATE_LIMIT_BYPASS_KEY) &&
+      req.get('x-bypass-key') === process.env.RATE_LIMIT_BYPASS_KEY,
     handler: (req, res) => {
       const resetMs = req.rateLimit?.resetTime ? req.rateLimit.resetTime.getTime() - Date.now() : windowMs
       const retryAfterSeconds = Math.min(Math.max(1, Math.ceil(resetMs / 1000)), Math.ceil(windowMs / 1000))
