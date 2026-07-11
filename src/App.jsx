@@ -1,39 +1,48 @@
-import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, MotionConfig } from 'motion/react'
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, MotionConfig } from "motion/react";
 
 const SUGGESTED_TAGS = [
-  'trap', 'drill', 'boom bap', 'r&b', 'afrobeats', 'jersey club',
-  'lofi', 'dark', 'dreamy', 'aggressive', 'bouncy', 'melancholy',
-]
+  "trap",
+  "drill",
+  "boom bap",
+  "r&b",
+  "afrobeats",
+  "jersey club",
+  "lofi",
+  "dark",
+  "dreamy",
+  "aggressive",
+  "bouncy",
+  "melancholy",
+];
 
-const TAGS_REQUIRED_MESSAGE = 'Add at least one tag describing the beat.'
-const GENERIC_ERROR_MESSAGE = 'Name generation hiccuped. Try again.'
+const TAGS_REQUIRED_MESSAGE = "Add at least one tag describing the beat.";
+const GENERIC_ERROR_MESSAGE = "Name generation hiccuped. Try again.";
 
-// tight and quantized — a pad hit, not a bounce
-const spring = { type: 'spring', stiffness: 700, damping: 42 }
+const spring = { type: "spring", stiffness: 700, damping: 42 };
 
 function formatCooldown(totalSeconds) {
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  return `${m}:${String(s).padStart(2, '0')}`
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function TagInput({ tags, onChange }) {
-  const [draft, setDraft] = useState('')
-  const inputRef = useRef(null)
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef(null);
 
   function addTag(raw) {
-    const tag = raw.trim()
-    if (tag && !tags.includes(tag)) onChange([...tags, tag])
-    setDraft('')
+    const tag = raw.trim();
+    if (tag && !tags.includes(tag)) onChange([...tags, tag]);
+    setDraft("");
   }
 
   function onKeyDown(e) {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addTag(draft)
-    } else if (e.key === 'Backspace' && !draft && tags.length) {
-      onChange(tags.slice(0, -1))
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(draft);
+    } else if (e.key === "Backspace" && !draft && tags.length) {
+      onChange(tags.slice(0, -1));
     }
   }
 
@@ -73,7 +82,7 @@ function TagInput({ tags, onChange }) {
           onKeyDown={onKeyDown}
           onBlur={() => addTag(draft)}
           enterKeyHint="enter"
-          placeholder={tags.length ? '' : 'dark trap, eerie bells, hyperpop…'}
+          placeholder={tags.length ? "" : "dark trap, eerie bells, hyperpop…"}
           className="min-w-32 flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
         />
       </div>
@@ -98,22 +107,22 @@ function TagInput({ tags, onChange }) {
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }
 
 const padVariants = {
   hidden: { opacity: 0, scale: 0.9 },
   show: { opacity: 1, scale: 1, transition: spring },
-}
+};
 
 function NamePad({ name }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(name)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1200)
+      await navigator.clipboard.writeText(name);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
     } catch {
       /* clipboard unavailable — nothing to do */
     }
@@ -127,28 +136,37 @@ function NamePad({ name }) {
       onClick={copy}
       className={`flex min-h-24 flex-col justify-between rounded-lg border bg-gradient-to-b from-zinc-800 to-zinc-900 p-3 text-left transition-colors ${
         copied
-          ? 'border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]'
-          : 'border-zinc-700/80 hover:border-zinc-500'
+          ? "border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]"
+          : "border-zinc-700/80 hover:border-zinc-500"
       }`}
     >
-      <span className="text-[0.95rem] font-medium leading-snug text-zinc-100">{name}</span>
+      <span className="text-[0.95rem] font-medium leading-snug text-zinc-100">
+        {name}
+      </span>
       <span className="mt-2 flex items-center gap-1.5">
         <span
           className={`h-1.5 w-1.5 rounded-full transition-all ${
-            copied ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]' : 'bg-zinc-600'
+            copied
+              ? "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]"
+              : "bg-zinc-600"
           }`}
         />
-        <span className={`font-mono text-[0.65rem] uppercase tracking-wider ${copied ? 'text-amber-300' : 'text-zinc-500'}`}>
-          {copied ? 'copied' : 'copy'}
+        <span
+          className={`font-mono text-[0.65rem] uppercase tracking-wider ${copied ? "text-amber-300" : "text-zinc-400"}`}
+        >
+          {copied ? "copied" : "copy"}
         </span>
       </span>
     </motion.button>
-  )
+  );
 }
 
 function StepSequencer() {
   return (
-    <span className="flex items-center justify-center gap-1" aria-label="generating">
+    <span
+      className="flex items-center justify-center gap-1"
+      aria-label="generating"
+    >
       {Array.from({ length: 8 }, (_, i) => (
         <span
           key={i}
@@ -157,65 +175,67 @@ function StepSequencer() {
         />
       ))}
     </span>
-  )
+  );
 }
 
 export default function App() {
-  const [tags, setTags] = useState([])
-  const [bpm, setBpm] = useState('')
-  const [referenceArtist, setReferenceArtist] = useState('')
-  const [vibeNotes, setVibeNotes] = useState('')
-  const [names, setNames] = useState(null)
-  const [batchId, setBatchId] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [cooldownUntil, setCooldownUntil] = useState(null)
-  const [now, setNow] = useState(() => Date.now())
-  // names already shown this session, so regenerating explores new ground (in memory only)
-  const seenNamesRef = useRef([])
+  const [tags, setTags] = useState([]);
+  const [bpm, setBpm] = useState("");
+  const [referenceArtist, setReferenceArtist] = useState("");
+  const [vibeNotes, setVibeNotes] = useState("");
+  const [names, setNames] = useState(null);
+  const [batchId, setBatchId] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [cooldownUntil, setCooldownUntil] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
+  const seenNamesRef = useRef([]);
 
-  const cooldownSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0
+  const cooldownSeconds = cooldownUntil
+    ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000))
+    : 0;
 
-  // pads land in sixteenth-notes at the beat's own tempo (falls back to 125 BPM)
-  const bpmNum = Number(bpm)
-  const stepSeconds = Math.min(0.2, Math.max(0.05, bpmNum > 0 ? 15 / bpmNum : 0.12))
+  const bpmNum = Number(bpm);
+  const stepSeconds = Math.min(
+    0.2,
+    Math.max(0.05, bpmNum > 0 ? 15 / bpmNum : 0.12),
+  );
 
   useEffect(() => {
-    if (!cooldownUntil) return undefined
-    const id = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [cooldownUntil])
+    if (!cooldownUntil) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
 
   useEffect(() => {
     if (cooldownUntil && cooldownSeconds === 0) {
-      setCooldownUntil(null)
-      setError(null)
+      setCooldownUntil(null);
+      setError(null);
     }
-  }, [cooldownUntil, cooldownSeconds])
+  }, [cooldownUntil, cooldownSeconds]);
 
   function nudgeBpm(delta) {
     setBpm((prev) => {
-      const n = Number(prev)
-      const base = prev !== '' && Number.isFinite(n) ? n : 120
-      return String(Math.min(300, Math.max(40, base + delta)))
-    })
+      const n = Number(prev);
+      const base = prev !== "" && Number.isFinite(n) ? n : 120;
+      return String(Math.min(300, Math.max(40, base + delta)));
+    });
   }
 
   async function generate() {
     if (tags.length === 0) {
-      setError(TAGS_REQUIRED_MESSAGE)
-      return
+      setError(TAGS_REQUIRED_MESSAGE);
+      return;
     }
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      // operator bypass: localStorage.setItem('onoma-bypass-key', '…') once on your own devices
-      const bypassKey = localStorage.getItem('onoma-bypass-key')
-      const res = await fetch('/api/generate', {
-        method: 'POST',
+      const bypassKey = localStorage.getItem("onoma-bypass-key");
+      const res = await fetch("/api/generate", {
+        method: "POST",
         headers: {
-          'content-type': 'application/json',
-          ...(bypassKey && { 'x-bypass-key': bypassKey }),
+          "content-type": "application/json",
+          ...(bypassKey && { "x-bypass-key": bypassKey }),
         },
         body: JSON.stringify({
           tags,
@@ -224,22 +244,24 @@ export default function App() {
           vibeNotes: vibeNotes || undefined,
           avoid: seenNamesRef.current.length ? seenNamesRef.current : undefined,
         }),
-      })
-      const body = await res.json()
+      });
+      const body = await res.json();
       if (!res.ok) {
-        setError(body?.error?.message ?? GENERIC_ERROR_MESSAGE)
-        const retryAfter = body?.error?.retryAfterSeconds
-        setCooldownUntil(retryAfter ? Date.now() + retryAfter * 1000 : null)
-        if (retryAfter) setNow(Date.now())
-        return
+        setError(body?.error?.message ?? GENERIC_ERROR_MESSAGE);
+        const retryAfter = body?.error?.retryAfterSeconds;
+        setCooldownUntil(retryAfter ? Date.now() + retryAfter * 1000 : null);
+        if (retryAfter) setNow(Date.now());
+        return;
       }
-      setNames(body.names)
-      setBatchId((id) => id + 1)
-      seenNamesRef.current = [...seenNamesRef.current, ...body.names].slice(-40)
+      setNames(body.names);
+      setBatchId((id) => id + 1);
+      seenNamesRef.current = [...seenNamesRef.current, ...body.names].slice(
+        -40,
+      );
     } catch {
-      setError(GENERIC_ERROR_MESSAGE)
+      setError(GENERIC_ERROR_MESSAGE);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -258,12 +280,16 @@ export default function App() {
               <motion.span
                 className="inline-block text-amber-400"
                 animate={{ opacity: [1, 0.35, 1] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{
+                  duration: 2.4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               >
                 .
               </motion.span>
             </h1>
-            <p className="mt-1 font-mono text-xs text-zinc-500">
+            <p className="mt-1 font-mono text-xs text-zinc-400">
               stop exporting untitled_final_v3.wav
             </p>
           </motion.header>
@@ -273,8 +299,8 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...spring, delay: 0.06 }}
             onSubmit={(e) => {
-              e.preventDefault()
-              generate()
+              e.preventDefault();
+              generate();
             }}
             className="space-y-4"
           >
@@ -287,8 +313,14 @@ export default function App() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="bpm" className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400">
-                  BPM <span className="normal-case text-zinc-600">(optional)</span>
+                <label
+                  htmlFor="bpm"
+                  className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400"
+                >
+                  BPM{" "}
+                  <span className="normal-case text-zinc-400/80">
+                    (optional)
+                  </span>
                 </label>
                 <div className="flex items-stretch overflow-hidden rounded-lg border border-zinc-700 bg-black shadow-[inset_0_2px_6px_rgba(0,0,0,0.7)] focus-within:border-amber-400">
                   <button
@@ -304,7 +336,9 @@ export default function App() {
                     type="text"
                     inputMode="numeric"
                     value={bpm}
-                    onChange={(e) => setBpm(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                    onChange={(e) =>
+                      setBpm(e.target.value.replace(/\D/g, "").slice(0, 3))
+                    }
                     placeholder="140"
                     className="w-full min-w-0 bg-transparent px-1 py-2.5 text-center font-mono text-sm text-amber-300 outline-none [text-shadow:0_0_8px_rgba(251,191,36,0.4)] placeholder:text-amber-300/20"
                   />
@@ -319,8 +353,14 @@ export default function App() {
                 </div>
               </div>
               <div>
-                <label htmlFor="artist" className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400">
-                  Sounds like <span className="normal-case text-zinc-600">(optional)</span>
+                <label
+                  htmlFor="artist"
+                  className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400"
+                >
+                  Sounds like{" "}
+                  <span className="normal-case text-zinc-400/80">
+                    (optional)
+                  </span>
                 </label>
                 <input
                   id="artist"
@@ -333,8 +373,12 @@ export default function App() {
             </div>
 
             <div>
-              <label htmlFor="vibe" className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
-                Vibe notes <span className="normal-case text-zinc-600">(optional)</span>
+              <label
+                htmlFor="vibe"
+                className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400"
+              >
+                Vibe notes{" "}
+                <span className="normal-case text-zinc-400/80">(optional)</span>
               </label>
               <textarea
                 id="vibe"
@@ -349,8 +393,8 @@ export default function App() {
             <motion.button
               type="submit"
               disabled={loading || cooldownSeconds > 0}
-              style={{ boxShadow: '0 5px 0 0 var(--color-amber-600)' }}
-              whileTap={{ y: 5, boxShadow: '0 0px 0 0 var(--color-amber-600)' }}
+              style={{ boxShadow: "0 5px 0 0 var(--color-amber-600)" }}
+              whileTap={{ y: 5, boxShadow: "0 0px 0 0 var(--color-amber-600)" }}
               transition={spring}
               className="w-full rounded-xl bg-amber-400 py-3 font-bold uppercase tracking-widest text-zinc-950 hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
             >
@@ -360,9 +404,9 @@ export default function App() {
                 ) : cooldownSeconds > 0 ? (
                   `wait ${formatCooldown(cooldownSeconds)}`
                 ) : names ? (
-                  'Regenerate'
+                  "Regenerate"
                 ) : (
-                  'Generate names'
+                  "Generate names"
                 )}
               </span>
             </motion.button>
@@ -376,7 +420,10 @@ export default function App() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0, x: [0, -6, 6, -6, 6, 0] }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ default: spring, x: { duration: 0.4, ease: 'easeInOut' } }}
+                transition={{
+                  default: spring,
+                  x: { duration: 0.4, ease: "easeInOut" },
+                }}
                 className="mt-4 rounded-lg border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300"
               >
                 {error}
@@ -394,7 +441,9 @@ export default function App() {
               key={batchId}
               initial="hidden"
               animate="show"
-              variants={{ show: { transition: { staggerChildren: stepSeconds } } }}
+              variants={{
+                show: { transition: { staggerChildren: stepSeconds } },
+              }}
               className="mt-6 grid grid-cols-2 gap-2"
               aria-label="generated names"
             >
@@ -408,7 +457,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mt-12 text-center font-mono text-xs text-zinc-600"
+            className="mt-12 text-center font-mono text-xs text-zinc-400/80"
           >
             <a
               href="https://ko-fi.com/izao00"
@@ -422,5 +471,5 @@ export default function App() {
         </main>
       </div>
     </MotionConfig>
-  )
+  );
 }
