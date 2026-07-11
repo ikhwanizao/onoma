@@ -2,6 +2,32 @@ import express from 'express'
 import rateLimit from 'express-rate-limit'
 import { generateNames, QuotaExhaustedError } from './gemini.js'
 
+const MAX_TAGS = 20
+const MAX_FIELD_LENGTH = 200
+
+function sendError(res, status, code, message) {
+  res.status(status).json({ error: { code, message } })
+}
+
+function cleanText(value) {
+  return typeof value === 'string' && value.trim() ? value.trim().slice(0, MAX_FIELD_LENGTH) : undefined
+}
+
+// Normalize the raw request body into a Beat Profile, or null when no usable tags
+function toBeatProfile(body) {
+  const { tags, bpm, referenceArtist, vibeNotes } = body ?? {}
+  const cleanTags = Array.isArray(tags)
+    ? tags.map(cleanText).filter(Boolean).slice(0, MAX_TAGS)
+    : []
+  if (cleanTags.length === 0) return null
+  return {
+    tags: cleanTags,
+    bpm: Number.isFinite(Number(bpm)) && bpm !== '' && bpm !== null ? Number(bpm) : undefined,
+    referenceArtist: cleanText(referenceArtist),
+    vibeNotes: cleanText(vibeNotes),
+  }
+}
+
 export function createApp() {
   const app = express()
   // Cloud Run fronts the app with exactly one proxy layer (see ADR-0001)
@@ -14,43 +40,24 @@ export function createApp() {
     limit: Number(process.env.RATE_LIMIT_MAX) || 20,
     standardHeaders: true,
     legacyHeaders: false,
-    handler: (req, res) =>
-      res.status(429).json({
-        error: { code: 'RATE_LIMITED', message: 'Slow down — try again in a bit.' },
-      }),
+    handler: (req, res) => sendError(res, 429, 'RATE_LIMITED', 'Slow down — try again in a bit.'),
   })
 
   app.post('/api/generate', limiter, async (req, res) => {
-    const { tags, bpm, referenceArtist, vibeNotes } = req.body ?? {}
-    const cleanTags = Array.isArray(tags)
-      ? tags.filter((t) => typeof t === 'string' && t.trim())
-      : []
-    if (cleanTags.length === 0) {
-      return res.status(400).json({
-        error: { code: 'TAGS_REQUIRED', message: 'Add at least one tag describing the beat.' },
-      })
+    const profile = toBeatProfile(req.body)
+    if (!profile) {
+      return sendError(res, 400, 'TAGS_REQUIRED', 'Add at least one tag describing the beat.')
     }
 
     try {
-      let names = await generateNames({ tags: cleanTags, bpm, referenceArtist, vibeNotes })
-      if (typeof referenceArtist === 'string' && referenceArtist.trim()) {
-        const artist = referenceArtist.trim().toLowerCase()
-        names = names.filter((n) => !n.toLowerCase().includes(artist))
-      }
+      const names = await generateNames(profile)
       res.json({ names })
     } catch (err) {
       if (err instanceof QuotaExhaustedError) {
-        return res.status(503).json({
-          error: {
-            code: 'QUOTA_EXHAUSTED',
-            message: 'Onoma is out of names for today — come back tomorrow.',
-          },
-        })
+        return sendError(res, 503, 'QUOTA_EXHAUSTED', 'Onoma is out of names for today — come back tomorrow.')
       }
       console.error('generation failed:', err.message)
-      res.status(502).json({
-        error: { code: 'GENERATION_FAILED', message: 'Name generation hiccuped. Try again.' },
-      })
+      sendError(res, 502, 'GENERATION_FAILED', 'Name generation hiccuped. Try again.')
     }
   })
 

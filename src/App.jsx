@@ -5,12 +5,8 @@ const SUGGESTED_TAGS = [
   'lofi', 'dark', 'dreamy', 'aggressive', 'bouncy', 'melancholy',
 ]
 
-const ERROR_MESSAGES = {
-  TAGS_REQUIRED: 'Add at least one tag describing the beat.',
-  RATE_LIMITED: 'Slow down — try again in a bit.',
-  QUOTA_EXHAUSTED: 'Onoma is out of names for today — come back tomorrow.',
-  GENERATION_FAILED: 'Name generation hiccuped. Try again.',
-}
+const TAGS_REQUIRED_MESSAGE = 'Add at least one tag describing the beat.'
+const GENERIC_ERROR_MESSAGE = 'Name generation hiccuped. Try again.'
 
 function TagInput({ tags, onChange }) {
   const [draft, setDraft] = useState('')
@@ -123,7 +119,7 @@ export default function App() {
 
   async function generate() {
     if (tags.length === 0) {
-      setError(ERROR_MESSAGES.TAGS_REQUIRED)
+      setError(TAGS_REQUIRED_MESSAGE)
       return
     }
     setLoading(true)
@@ -141,12 +137,12 @@ export default function App() {
       })
       const body = await res.json()
       if (!res.ok) {
-        setError(ERROR_MESSAGES[body?.error?.code] ?? ERROR_MESSAGES.GENERATION_FAILED)
+        setError(body?.error?.message ?? GENERIC_ERROR_MESSAGE)
         return
       }
       setNames(body.names)
     } catch {
-      setError(ERROR_MESSAGES.GENERATION_FAILED)
+      setError(GENERIC_ERROR_MESSAGE)
     } finally {
       setLoading(false)
     }

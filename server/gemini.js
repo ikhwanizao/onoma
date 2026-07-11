@@ -4,7 +4,11 @@ const BASE_URL = 'https://generativelanguage.googleapis.com'
 const BATCH_SIZE = 10
 
 export class QuotaExhaustedError extends Error {}
-export class UpstreamError extends Error {}
+class UpstreamError extends Error {}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 function buildPrompt({ tags, bpm, referenceArtist, vibeNotes }) {
   const profile = [
@@ -49,7 +53,13 @@ export async function generateNames(profile) {
     }),
   })
 
-  if (res.status === 429) throw new QuotaExhaustedError('Gemini daily quota exhausted')
+  if (res.status === 429) {
+    // Gemini returns 429 for both per-minute and per-day limits; only the
+    // daily one means "come back tomorrow"
+    const detail = await res.text().catch(() => '')
+    if (/per.?day|daily/i.test(detail)) throw new QuotaExhaustedError('Gemini daily quota exhausted')
+    throw new UpstreamError('Gemini per-minute rate limit hit')
+  }
   if (!res.ok) throw new UpstreamError(`Gemini responded ${res.status}`)
 
   let names
@@ -62,5 +72,11 @@ export async function generateNames(profile) {
   if (!Array.isArray(names) || !names.every((n) => typeof n === 'string' && n.trim())) {
     throw new UpstreamError('Gemini returned an unexpected shape')
   }
+
+  if (profile.referenceArtist) {
+    const artist = new RegExp(`\\b${escapeRegExp(profile.referenceArtist)}\\b`, 'i')
+    names = names.filter((n) => !artist.test(n))
+  }
+  if (names.length === 0) throw new UpstreamError('every generated name violated the artist rule')
   return names
 }

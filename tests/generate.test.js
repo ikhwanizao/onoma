@@ -69,11 +69,34 @@ describe('POST /api/generate', () => {
   })
 
   it('returns a friendly 503 when the Gemini daily quota is exhausted', async () => {
-    mockGemini({ status: 429, body: { error: { message: 'quota exceeded' } } })
+    mockGemini({
+      status: 429,
+      body: {
+        error: {
+          status: 'RESOURCE_EXHAUSTED',
+          message: 'Quota exceeded for metric: GenerateRequestsPerDayPerProjectPerModel-FreeTier',
+        },
+      },
+    })
     const res = await request(createApp()).post('/api/generate').send({ tags: ['drill'] })
     expect(res.status).toBe(503)
     expect(res.body.error.code).toBe('QUOTA_EXHAUSTED')
     expect(res.body.error.message).toMatch(/out of names for today/i)
+  })
+
+  it('treats a per-minute Gemini 429 as a retryable failure, not daily exhaustion', async () => {
+    mockGemini({
+      status: 429,
+      body: {
+        error: {
+          status: 'RESOURCE_EXHAUSTED',
+          message: 'Quota exceeded for metric: GenerateRequestsPerMinutePerProjectPerModel',
+        },
+      },
+    })
+    const res = await request(createApp()).post('/api/generate').send({ tags: ['drill'] })
+    expect(res.status).toBe(502)
+    expect(res.body.error.code).toBe('GENERATION_FAILED')
   })
 
   it('never returns names containing the reference artist, even if the LLM disobeys', async () => {
@@ -83,6 +106,24 @@ describe('POST /api/generate', () => {
       .send({ tags: ['rage trap'], referenceArtist: 'Travis Scott' })
     expect(res.status).toBe(200)
     expect(res.body.names).toEqual(['UTOPIA FLOOR', 'RAGER'])
+  })
+
+  it('matches the reference artist on word boundaries, not substrings', async () => {
+    mockGemini({ names: ['EYES ON ME', 'YE STORM', 'goodbye moon', 'DONDA NIGHTS'] })
+    const res = await request(createApp())
+      .post('/api/generate')
+      .send({ tags: ['soul'], referenceArtist: 'Ye' })
+    expect(res.status).toBe(200)
+    expect(res.body.names).toEqual(['EYES ON ME', 'goodbye moon', 'DONDA NIGHTS'])
+  })
+
+  it('returns 502 rather than an empty Batch when every name gets filtered', async () => {
+    mockGemini({ names: ['Metro Boomin Vibes', 'metro boomin nights'] })
+    const res = await request(createApp())
+      .post('/api/generate')
+      .send({ tags: ['trap'], referenceArtist: 'Metro Boomin' })
+    expect(res.status).toBe(502)
+    expect(res.body.error.code).toBe('GENERATION_FAILED')
   })
 
   it('rate-limits repeated generations from the same IP', async () => {
