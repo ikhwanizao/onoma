@@ -38,7 +38,8 @@ export function createApp() {
   const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000
   const limiter = rateLimit({
     windowMs,
-    limit: Number(process.env.RATE_LIMIT_MAX) || 20,
+    // 15/h caps one IP at 360/day against the project's 500 RPD Gemini quota
+    limit: Number(process.env.RATE_LIMIT_MAX) || 15,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {

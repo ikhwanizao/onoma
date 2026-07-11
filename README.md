@@ -29,7 +29,7 @@ Tests exercise the single seam (`POST /api/generate`) with the Gemini call mocke
 | --- | --- | --- |
 | `GEMINI_API_KEY` | — (required) | Gemini API key; server-side only |
 | `GEMINI_MODEL` | `gemini-flash-lite-latest` | Model ID |
-| `RATE_LIMIT_MAX` | `20` | Generations per IP per window |
+| `RATE_LIMIT_MAX` | `15` | Generations per IP per window |
 | `RATE_LIMIT_WINDOW_MS` | `3600000` (1 h) | Rate-limit window |
 | `PORT` | `8080` | Listen port (set by Cloud Run) |
 
@@ -48,4 +48,4 @@ gcloud run deploy onoma \
 
 (Create the secret first: `gcloud secrets create onoma-gemini-key --data-file=-`)
 
-Before launch: verify your project's live Gemini free-tier quota in [AI Studio](https://aistudio.google.com/rate-limit) and size `RATE_LIMIT_MAX` so one IP can't eat more than a small fraction of it.
+Quota reality check (verified in [AI Studio](https://aistudio.google.com/rate-limit), 2026-07): this project's free tier gives Gemini 3.1 Flash Lite **15 RPM / 500 requests per day** — one request = one batch. The default `RATE_LIMIT_MAX=15` caps a single IP at 360/day so one abuser can't drain the whole quota. Re-check the live caps if Google rebalances tiers.
