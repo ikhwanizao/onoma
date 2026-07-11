@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit'
 import { generateNames, QuotaExhaustedError } from './gemini.js'
 
 const MAX_TAGS = 20
+const MAX_AVOID_NAMES = 40
 const MAX_FIELD_LENGTH = 200
 
 function sendError(res, status, code, message) {
@@ -15,7 +16,7 @@ function cleanText(value) {
 
 // Normalize the raw request body into a Beat Profile, or null when no usable tags
 function toBeatProfile(body) {
-  const { tags, bpm, referenceArtist, vibeNotes } = body ?? {}
+  const { tags, bpm, referenceArtist, vibeNotes, avoid } = body ?? {}
   const cleanTags = Array.isArray(tags)
     ? tags.map(cleanText).filter(Boolean).slice(0, MAX_TAGS)
     : []
@@ -25,6 +26,9 @@ function toBeatProfile(body) {
     bpm: Number.isFinite(Number(bpm)) && bpm !== '' && bpm !== null ? Number(bpm) : undefined,
     referenceArtist: cleanText(referenceArtist),
     vibeNotes: cleanText(vibeNotes),
+    avoid: Array.isArray(avoid)
+      ? avoid.map(cleanText).filter(Boolean).slice(-MAX_AVOID_NAMES)
+      : undefined,
   }
 }
 

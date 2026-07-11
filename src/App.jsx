@@ -170,6 +170,8 @@ export default function App() {
   const [error, setError] = useState(null)
   const [cooldownUntil, setCooldownUntil] = useState(null)
   const [now, setNow] = useState(() => Date.now())
+  // names already shown this session, so regenerating explores new ground (in memory only)
+  const seenNamesRef = useRef([])
 
   const cooldownSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0
 
@@ -211,6 +213,7 @@ export default function App() {
           bpm: bpm ? Number(bpm) : undefined,
           referenceArtist: referenceArtist || undefined,
           vibeNotes: vibeNotes || undefined,
+          avoid: seenNamesRef.current.length ? seenNamesRef.current : undefined,
         }),
       })
       const body = await res.json()
@@ -223,6 +226,7 @@ export default function App() {
       }
       setNames(body.names)
       setBatchId((id) => id + 1)
+      seenNamesRef.current = [...seenNamesRef.current, ...body.names].slice(-40)
     } catch {
       setError(GENERIC_ERROR_MESSAGE)
     } finally {

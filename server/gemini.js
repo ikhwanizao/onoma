@@ -10,15 +10,21 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function buildPrompt({ tags, bpm, referenceArtist, vibeNotes }) {
+function buildPrompt({ tags, bpm, referenceArtist, vibeNotes, avoid }) {
   const profile = [
     `Tags: ${tags.join(', ')}`,
     bpm ? `BPM: ${bpm}` : null,
     referenceArtist ? `Reference artist (style anchor only): ${referenceArtist}` : null,
     vibeNotes ? `Vibe notes: ${vibeNotes}` : null,
+    // a nonce decorrelates sampling when different users send the same profile
+    `Variety seed: ${Math.random().toString(36).slice(2, 8)}`,
   ]
     .filter(Boolean)
     .join('\n')
+
+  const avoidBlock = avoid?.length
+    ? `\n\nAlready suggested — do NOT reuse these names or close variants of them:\n${avoid.join(', ')}`
+    : ''
 
   return `You name beats for beatmakers. Generate exactly ${BATCH_SIZE} beat names for the beat described below.
 
@@ -31,6 +37,7 @@ Rules:
 - Mild profanity and edge are fine when the vibe calls for it. Never use slurs.
 - Write the names in the same language as the profile (natural code-mixing is fine).
 - Names must be short: 1 to 6 words.
+- Surprise: avoid the most obvious choices for these tags — every batch should feel fresh.${avoidBlock}
 
 Return ONLY a JSON array of ${BATCH_SIZE} strings.`
 }
@@ -46,7 +53,7 @@ export async function generateNames(profile) {
     body: JSON.stringify({
       contents: [{ parts: [{ text: buildPrompt(profile) }] }],
       generationConfig: {
-        temperature: 1.2,
+        temperature: 1.3,
         responseMimeType: 'application/json',
         responseSchema: { type: 'ARRAY', items: { type: 'STRING' } },
       },

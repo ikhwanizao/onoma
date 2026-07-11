@@ -62,6 +62,28 @@ describe('POST /api/generate', () => {
     expect(res.body.names).toEqual(TEN_NAMES)
   })
 
+  it('tells the LLM to avoid names the client has already seen', async () => {
+    let outbound
+    mockAgent
+      .get(GEMINI_ORIGIN)
+      .intercept({ path: /generateContent/, method: 'POST' })
+      .reply(
+        200,
+        (opts) => {
+          outbound = JSON.parse(opts.body)
+          return { candidates: [{ content: { parts: [{ text: JSON.stringify(TEN_NAMES) }] } }] }
+        },
+        { headers: { 'content-type': 'application/json' } },
+      )
+    const res = await request(createApp())
+      .post('/api/generate')
+      .send({ tags: ['trap'], avoid: ['VANDAL', 'concrete silence'] })
+    expect(res.status).toBe(200)
+    const prompt = outbound.contents[0].parts[0].text
+    expect(prompt).toContain('VANDAL')
+    expect(prompt).toContain('concrete silence')
+  })
+
   it('returns 502 when Gemini responds with an unusable payload', async () => {
     mockGemini({ body: { candidates: [] } })
     const res = await request(createApp()).post('/api/generate').send({ tags: ['lofi'] })
