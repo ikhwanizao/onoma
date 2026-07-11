@@ -193,6 +193,14 @@ export default function App() {
     }
   }, [cooldownUntil, cooldownSeconds])
 
+  function nudgeBpm(delta) {
+    setBpm((prev) => {
+      const n = Number(prev)
+      const base = prev !== '' && Number.isFinite(n) ? n : 120
+      return String(Math.min(300, Math.max(40, base + delta)))
+    })
+  }
+
   async function generate() {
     if (tags.length === 0) {
       setError(TAGS_REQUIRED_MESSAGE)
@@ -282,16 +290,33 @@ export default function App() {
                 <label htmlFor="bpm" className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400">
                   BPM <span className="normal-case text-zinc-600">(optional)</span>
                 </label>
-                <input
-                  id="bpm"
-                  type="number"
-                  min="1"
-                  max="999"
-                  value={bpm}
-                  onChange={(e) => setBpm(e.target.value)}
-                  placeholder="140"
-                  className="w-full rounded-lg border border-zinc-700 bg-black px-3 py-2.5 font-mono text-sm text-amber-300 shadow-[inset_0_2px_6px_rgba(0,0,0,0.7)] outline-none [text-shadow:0_0_8px_rgba(251,191,36,0.4)] placeholder:text-amber-300/20 focus:border-amber-400"
-                />
+                <div className="flex items-stretch overflow-hidden rounded-lg border border-zinc-700 bg-black shadow-[inset_0_2px_6px_rgba(0,0,0,0.7)] focus-within:border-amber-400">
+                  <button
+                    type="button"
+                    aria-label="decrease BPM"
+                    onClick={() => nudgeBpm(-1)}
+                    className="w-9 shrink-0 select-none border-r border-zinc-800 bg-zinc-900 font-mono text-base text-zinc-400 hover:text-amber-300 active:bg-zinc-800"
+                  >
+                    −
+                  </button>
+                  <input
+                    id="bpm"
+                    type="text"
+                    inputMode="numeric"
+                    value={bpm}
+                    onChange={(e) => setBpm(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                    placeholder="140"
+                    className="w-full min-w-0 bg-transparent px-1 py-2.5 text-center font-mono text-sm text-amber-300 outline-none [text-shadow:0_0_8px_rgba(251,191,36,0.4)] placeholder:text-amber-300/20"
+                  />
+                  <button
+                    type="button"
+                    aria-label="increase BPM"
+                    onClick={() => nudgeBpm(1)}
+                    className="w-9 shrink-0 select-none border-l border-zinc-800 bg-zinc-900 font-mono text-base text-zinc-400 hover:text-amber-300 active:bg-zinc-800"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
               <div>
                 <label htmlFor="artist" className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400">
