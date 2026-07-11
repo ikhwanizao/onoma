@@ -35,12 +35,23 @@ export function createApp() {
   app.use(express.json())
 
   // In-memory per-IP limiting is valid only while max-instances = 1 (ADR-0001)
+  const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000
   const limiter = rateLimit({
-    windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000,
+    windowMs,
     limit: Number(process.env.RATE_LIMIT_MAX) || 20,
     standardHeaders: true,
     legacyHeaders: false,
-    handler: (req, res) => sendError(res, 429, 'RATE_LIMITED', 'Slow down — try again in a bit.'),
+    handler: (req, res) => {
+      const resetMs = req.rateLimit?.resetTime ? req.rateLimit.resetTime.getTime() - Date.now() : windowMs
+      const retryAfterSeconds = Math.min(Math.max(1, Math.ceil(resetMs / 1000)), Math.ceil(windowMs / 1000))
+      res.status(429).json({
+        error: {
+          code: 'RATE_LIMITED',
+          message: `Slow down — you can generate again in about ${Math.ceil(retryAfterSeconds / 60)} min.`,
+          retryAfterSeconds,
+        },
+      })
+    },
   })
 
   app.post('/api/generate', limiter, async (req, res) => {

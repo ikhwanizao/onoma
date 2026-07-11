@@ -138,5 +138,7 @@ describe('POST /api/generate', () => {
     expect(second.status).toBe(200)
     expect(third.status).toBe(429)
     expect(third.body.error.code).toBe('RATE_LIMITED')
+    expect(third.body.error.retryAfterSeconds).toBeGreaterThan(0)
+    expect(third.body.error.retryAfterSeconds).toBeLessThanOrEqual(60 * 60)
   })
 })

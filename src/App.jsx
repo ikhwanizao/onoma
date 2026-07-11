@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 
 const SUGGESTED_TAGS = [
@@ -10,6 +10,12 @@ const TAGS_REQUIRED_MESSAGE = 'Add at least one tag describing the beat.'
 const GENERIC_ERROR_MESSAGE = 'Name generation hiccuped. Try again.'
 
 const spring = { type: 'spring', stiffness: 500, damping: 30 }
+
+function formatCooldown(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
 
 function TagInput({ tags, onChange }) {
   const [draft, setDraft] = useState('')
@@ -165,6 +171,23 @@ export default function App() {
   const [batchId, setBatchId] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [cooldownUntil, setCooldownUntil] = useState(null)
+  const [now, setNow] = useState(() => Date.now())
+
+  const cooldownSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0
+
+  useEffect(() => {
+    if (!cooldownUntil) return undefined
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [cooldownUntil])
+
+  useEffect(() => {
+    if (cooldownUntil && cooldownSeconds === 0) {
+      setCooldownUntil(null)
+      setError(null)
+    }
+  }, [cooldownUntil, cooldownSeconds])
 
   async function generate() {
     if (tags.length === 0) {
@@ -187,6 +210,9 @@ export default function App() {
       const body = await res.json()
       if (!res.ok) {
         setError(body?.error?.message ?? GENERIC_ERROR_MESSAGE)
+        const retryAfter = body?.error?.retryAfterSeconds
+        setCooldownUntil(retryAfter ? Date.now() + retryAfter * 1000 : null)
+        if (retryAfter) setNow(Date.now())
         return
       }
       setNames(body.names)
@@ -284,15 +310,23 @@ export default function App() {
 
             <motion.button
               type="submit"
-              disabled={loading}
+              disabled={loading || cooldownSeconds > 0}
               style={{ boxShadow: '0 5px 0 0 var(--color-lime-600)' }}
               whileHover={{ scale: 1.015 }}
               whileTap={{ y: 5, scale: 1, boxShadow: '0 0px 0 0 var(--color-lime-600)' }}
               transition={spring}
               className="w-full rounded-2xl bg-lime-400 py-3 font-extrabold uppercase tracking-wider text-zinc-950 hover:bg-lime-300 disabled:cursor-wait disabled:opacity-60"
             >
-              <span className="flex h-6 items-center justify-center">
-                {loading ? <LoadingDots /> : names ? 'Regenerate' : 'Generate names'}
+              <span className="flex h-6 items-center justify-center tabular-nums">
+                {loading ? (
+                  <LoadingDots />
+                ) : cooldownSeconds > 0 ? (
+                  `wait ${formatCooldown(cooldownSeconds)}`
+                ) : names ? (
+                  'Regenerate'
+                ) : (
+                  'Generate names'
+                )}
               </span>
             </motion.button>
           </motion.form>
@@ -309,6 +343,11 @@ export default function App() {
                 className="mt-4 rounded-xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300"
               >
                 {error}
+                {cooldownSeconds > 0 && (
+                  <span className="mt-1 block font-bold tabular-nums text-red-200">
+                    next batch in {formatCooldown(cooldownSeconds)}
+                  </span>
+                )}
               </motion.p>
             )}
           </AnimatePresence>
