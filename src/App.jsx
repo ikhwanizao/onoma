@@ -72,6 +72,7 @@ function TagInput({ tags, onChange }) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           onBlur={() => addTag(draft)}
+          enterKeyHint="enter"
           placeholder={tags.length ? '' : 'dark trap, eerie bells, hyperpop…'}
           className="min-w-32 flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
         />
@@ -278,7 +279,7 @@ export default function App() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="bpm" className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
+                <label htmlFor="bpm" className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400">
                   BPM <span className="normal-case text-zinc-600">(optional)</span>
                 </label>
                 <input
@@ -293,7 +294,7 @@ export default function App() {
                 />
               </div>
               <div>
-                <label htmlFor="artist" className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-zinc-400">
+                <label htmlFor="artist" className="mb-1.5 flex min-h-[2.25rem] items-end font-mono text-xs uppercase tracking-wider text-zinc-400">
                   Sounds like <span className="normal-case text-zinc-600">(optional)</span>
                 </label>
                 <input
