@@ -10,8 +10,9 @@ Domain glossary: [CONTEXT.md](CONTEXT.md) · Architecture decisions: [docs/adr/]
 
 ```sh
 npm install
-GEMINI_API_KEY=... npm run dev:api   # Express API on :8080
-npm run dev                          # Vite dev server on :5173, proxies /api
+cp .env.example .env   # then put your Gemini API key in .env
+npm run dev:api        # Express API on :8080 (loads .env)
+npm run dev            # Vite dev server on :5173, proxies /api
 ```
 
 ## Test
