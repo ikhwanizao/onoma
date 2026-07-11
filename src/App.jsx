@@ -36,13 +36,13 @@ function TagInput({ tags, onChange }) {
         {tags.map((tag) => (
           <span
             key={tag}
-            className="flex items-center gap-1.5 rounded-full bg-lime-400/15 px-3 py-1 text-sm text-lime-300"
+            className="flex items-center gap-1 rounded-full bg-lime-400/15 py-1 pl-3 pr-1.5 text-sm leading-none text-lime-300"
           >
             {tag}
             <button
               type="button"
               aria-label={`remove ${tag}`}
-              className="text-lime-300/60 hover:text-lime-300"
+              className="flex h-4 w-4 items-center justify-center rounded-full leading-none text-lime-300/60 hover:bg-lime-400/25 hover:text-lime-300"
               onClick={() => onChange(tags.filter((t) => t !== tag))}
             >
               ×
