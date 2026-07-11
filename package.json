@@ -1,0 +1,30 @@
+{
+  "name": "onoma",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Beat name generator for beatmakers — stop exporting untitled_final_v3.wav",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "node server/index.js",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "undici": "^8.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@vitejs/plugin-react": "^6.0.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "supertest": "^7.2.2",
+    "tailwindcss": "^4.3.2",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
+  }
+}
