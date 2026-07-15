@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  a,
+  select,
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+}
+
 @theme {
   --font-sans: 'Space Grotesk', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
