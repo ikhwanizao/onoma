@@ -136,26 +136,17 @@ function NamePad({ name }) {
       onClick={copy}
       className={`flex min-h-24 flex-col justify-between rounded-lg border bg-gradient-to-b from-zinc-800 to-zinc-900 p-3 text-left transition-colors ${
         copied
-          ? "border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]"
+          ? "border-amber-400/60"
           : "border-zinc-700/80 hover:border-zinc-500"
       }`}
     >
       <span className="text-[0.95rem] font-medium leading-snug text-zinc-100">
         {name}
       </span>
-      <span className="mt-2 flex items-center gap-1.5">
-        <span
-          className={`h-1.5 w-1.5 rounded-full transition-all ${
-            copied
-              ? "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]"
-              : "bg-zinc-600"
-          }`}
-        />
-        <span
-          className={`font-mono text-[0.65rem] uppercase tracking-wider ${copied ? "text-amber-300" : "text-zinc-400"}`}
-        >
-          {copied ? "copied" : "copy"}
-        </span>
+      <span
+        className={`mt-2 font-mono text-[0.65rem] uppercase tracking-wider ${copied ? "text-amber-300" : "text-zinc-400"}`}
+      >
+        {copied ? "copied" : "copy"}
       </span>
     </motion.button>
   );
